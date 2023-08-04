@@ -1,0 +1,50 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<cuda_runtime.h>
+#include<helper_cuda.h>
+#include<math.h>
+#include <cuda.h>
+#define N 1024
+
+__global__ void arrs(float *dA, float *dB, float *dsum)
+{
+int i = threadIdx.x;
+	if(i<N){
+	dsum[i]=dA[i]+dB[i];
+	}
+}
+
+int main()
+{
+float *A,*B, *sum,*dsum,*dA,*dB;
+size_t size = sizeof(float)*N;
+
+A=(float*)malloc(size);
+B=(float*)malloc(size);
+sum = (float*)malloc(size);
+
+
+	for(int i=0;i<N;i++){
+	A[i]=i;
+	B[i]=2*i;
+        }
+
+clock_t s=clock();
+cudaMalloc((void**)&dA,size);
+cudaMalloc((void**)&dB,size);
+cudaMalloc((void**)&dsum,size);
+cudaMemcpy(dA,A,size,cudaMemcpyHostToDevice);
+cudaMemcpy(dB,B,size,cudaMemcpyHostToDevice);
+arrs<<<1,1024>>>(dA,dB,dsum);
+cudaMemcpy(sum,dsum,size,cudaMemcpyDeviceToHost);
+clock_t e=clock();
+
+for(int i=0;i<N;i++){
+printf("\n sum:%f\t", sum[i]);
+}
+
+double time_used=(double)(e-s)/CLOCKS_PER_SEC;
+printf("\n time spent =%f\n", time_used);
+return 0;
+
+}
